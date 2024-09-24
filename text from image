@@ -1,0 +1,51 @@
+import requests
+from PIL import Image
+from io import BytesIO
+
+# Set your OpenAI API key here
+API_KEY = 'YOUR_API_KEY'
+API_URL = 'https://api.openai.com/v1/images/generations'
+
+def generate_image_from_text(prompt):
+    headers = {
+        'Authorization': f'Bearer {API_KEY}',
+        'Content-Type': 'application/json'
+    }
+    
+    data = {
+        'prompt': prompt,
+        'n': 1,
+        'size': '1024x1024'
+    }
+    
+    response = requests.post(API_URL, headers=headers, json=data)
+    
+    if response.status_code == 200:
+        image_url = response.json()['data'][0]['url']
+        return image_url
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
+
+def download_image(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        img = Image.open(BytesIO(response.content))
+        return img
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
+
+def main():
+    prompt = input("Enter the text prompt for image generation: ")
+    image_url = generate_image_from_text(prompt)
+    
+    if image_url:
+        print(f"Image generated: {image_url}")
+        image = download_image(image_url)
+        if image:
+            image.show()  # Display the image
+            image.save("generated_image.png")  # Save the image
+
+if __name__ == '__main__':
+    main()
