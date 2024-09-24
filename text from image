@@ -1,51 +1,43 @@
-import requests
 from PIL import Image
-from io import BytesIO
+import pytesseract
+import os
 
-# Set your OpenAI API key here
-API_KEY = 'YOUR_API_KEY'
-API_URL = 'https://api.openai.com/v1/images/generations'
-
-def generate_image_from_text(prompt):
-    headers = {
-        'Authorization': f'Bearer {API_KEY}',
-        'Content-Type': 'application/json'
-    }
-    
-    data = {
-        'prompt': prompt,
-        'n': 1,
-        'size': '1024x1024'
-    }
-    
-    response = requests.post(API_URL, headers=headers, json=data)
-    
-    if response.status_code == 200:
-        image_url = response.json()['data'][0]['url']
-        return image_url
-    else:
-        print(f"Error: {response.status_code} - {response.text}")
+# Function to extract text from image using Tesseract OCR
+def extract_text_from_image(image_path, output_file=None):
+    """
+    Extracts text from the given image using pytesseract.
+    :param image_path: Path to the image file.
+    :param output_file: Optional. If specified, saves the extracted text to this file.
+    :return: Extracted text as a string.
+    """
+    try:
+        # Open the image using Pillow
+        img = Image.open(image_path)
+        
+        # Use Tesseract to extract text
+        extracted_text = pytesseract.image_to_string(img)
+        
+        # Output the extracted text
+        print("Extracted Text:\n", extracted_text)
+        
+        # Save the extracted text to a file if output_file is provided
+        if output_file:
+            with open(output_file, 'w') as file:
+                file.write(extracted_text)
+            print(f"Extracted text saved to {output_file}")
+        
+        return extracted_text
+    except Exception as e:
+        print(f"Error occurred: {e}")
         return None
 
-def download_image(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        img = Image.open(BytesIO(response.content))
-        return img
-    else:
-        print(f"Error: {response.status_code} - {response.text}")
-        return None
-
-def main():
-    prompt = input("Enter the text prompt for image generation: ")
-    image_url = generate_image_from_text(prompt)
+# Example usage
+if __name__ == "__main__":
+    # Path to the invoice image
+    image_path = 'invoice_image.jpg'  # Replace with your image path
     
-    if image_url:
-        print(f"Image generated: {image_url}")
-        image = download_image(image_url)
-        if image:
-            image.show()  # Display the image
-            image.save("generated_image.png")  # Save the image
-
-if __name__ == '__main__':
-    main()
+    # Output file for saving the extracted text
+    output_file = 'extracted_invoice_text.txt'
+    
+    # Extract text from image
+    extract_text_from_image(image_path, output_file)
