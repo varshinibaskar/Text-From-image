@@ -1,0 +1,36 @@
+import io
+import os
+from google.cloud import vision
+
+# Function to extract text using Google Cloud Vision API
+def extract_text_from_image_google(image_path):
+    # Set the path to your Google Cloud service account key
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'path_to_your_service_account_key.json'
+    
+    # Initialize the Google Cloud Vision client
+    client = vision.ImageAnnotatorClient()
+
+    # Load the image file
+    with io.open(image_path, 'rb') as image_file:
+        content = image_file.read()
+    
+    # Construct the image object
+    image = vision.Image(content=content)
+
+    # Call the Vision API to detect text in the image
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+
+    if response.error.message:
+        raise Exception(f'API Error: {response.error.message}')
+    
+    # Return the extracted text
+    if texts:
+        return texts[0].description
+    else:
+        return "No text found in image."
+
+# Example usage
+image_path = 'your_image_file.jpg'  # Replace with your image path
+text = extract_text_from_image_google(image_path)
+print("Extracted Text:\n", text)
